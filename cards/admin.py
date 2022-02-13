@@ -21,8 +21,8 @@ class CardInlineModel(admin.TabularInline):
 
 class DeckAdmin(admin.ModelAdmin):
     list_display = [
-        'id',
         'name',
+        'author',
     ]
 
     inlines = [
