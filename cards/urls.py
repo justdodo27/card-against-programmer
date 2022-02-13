@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import Card
+from .views import Deck, Card
 
 app_name = 'cards'
 
 urlpatterns = [
-    path('', Card.as_view(), name='card'),
+    path('deck', Deck.as_view(), name='deck'),
+    path('card', Card.as_view(), name='card'),
 ]

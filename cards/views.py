@@ -1,9 +1,10 @@
-from pkg_resources import register_finder
-
-
 from rest_framework import generics
-from .models import Card
-from .serializers import CardSerializer
+from .models import Deck, Card
+from .serializers import DeckSerializer, CardSerializer
+
+class Deck(generics.ListAPIView):
+    serializer_class = DeckSerializer
+    queryset = Deck.objects.all()
 
 class Card(generics.ListAPIView):
     serializer_class = CardSerializer
