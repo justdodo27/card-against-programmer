@@ -1,3 +1,4 @@
+from tabnanny import verbose
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -12,6 +13,11 @@ class Updated(models.Model):
         abstract = True
 
 class Category(models.Model):
+    class Meta:
+        verbose_name = _('Category')
+        verbose_name_plural = _('Categories')
+        ordering = ['id']
+
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -44,10 +50,18 @@ class Card(Updated):
         verbose_name_plural = _('Cards')
         ordering = ['id']
 
+    TYPE = (
+        (0, _('White')),
+        (1, _('Black'))
+    )
+
     deck = models.ForeignKey(
         Deck, related_name='card', on_delete=models.CASCADE
     )
     content = models.CharField(max_length=255, verbose_name=_('Content'))
+    type = models.IntegerField(
+        choices=TYPE, default=0, verbose_name=_('Type of Card')
+    )
 
     def __str__(self):
         return self.content
