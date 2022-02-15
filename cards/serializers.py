@@ -22,6 +22,13 @@ class CardSerializer(serializers.ModelSerializer):
             'content',
             'type'
         ]
+        extra_kwargs = {
+            'deck': {'allow_null': False, 'required': True},
+        }
+
+    def create(self, validated_data):
+        card = Card.objects.create(**validated_data)
+        return card
 
 class DeckSerializer(serializers.ModelSerializer):
 
@@ -47,7 +54,6 @@ class DeckSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         categories = validated_data.pop("categories")
-        print(validated_data)
         deck = Deck.objects.create(**validated_data)
         deck.categories.set(categories)
         return deck

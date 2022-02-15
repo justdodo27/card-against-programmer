@@ -36,3 +36,15 @@ class DeckViewSet(ViewSet):
             for card in cards_data:
                 Card.objects.create(deck=deck, **card)
             return Response(serializer.data)
+
+class CardViewSet(ViewSet):
+
+    def create(self, request, format=None):
+        serializer = CardSerializer(data=request.data)
+        deck_id = request.data.pop('deck')
+        deck_instance = Deck.objects.get(id=deck_id)
+        if not serializer.is_valid():
+            raise APIException(f"ERROR : {serializer.errors}")
+        else:
+            serializer.save(deck=deck_instance)
+            return Response(serializer.data)
