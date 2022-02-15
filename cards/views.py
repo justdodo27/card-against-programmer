@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import APIException
 from rest_framework.viewsets import ViewSet
 from .models import Deck, Card, User, Category
-from .serializers import DeckSerializer, CardSerializer
+from .serializers import CategorySerializer, DeckSerializer, CardSerializer
 
 class Decks(generics.ListAPIView):
     serializer_class = DeckSerializer
@@ -47,4 +47,14 @@ class CardViewSet(ViewSet):
             raise APIException(f"ERROR : {serializer.errors}")
         else:
             serializer.save(deck=deck_instance)
+            return Response(serializer.data)
+
+class CategoryViewSet(ViewSet):
+
+    def create(self, request, format=None):
+        serializer = CategorySerializer(data=request.data)
+        if not serializer.is_valid():
+            raise APIException(f"ERROR : {serializer.errors}")
+        else:
+            serializer.save()
             return Response(serializer.data)

@@ -8,6 +8,10 @@ class CategorySerializer(serializers.ModelSerializer):
             'name'
         ]
 
+    def create(self, validated_data):
+        category = Category.objects.create(**validated_data)
+        return category
+
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

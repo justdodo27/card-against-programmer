@@ -1,6 +1,6 @@
 from django.urls import path
 from cards.models import Deck
-from .views import Decks, Cards, DeckID, DeckViewSet, CardViewSet
+from .views import Decks, Cards, DeckID, DeckViewSet, CardViewSet, CategoryViewSet
 
 app_name = 'cards'
 
@@ -9,5 +9,6 @@ urlpatterns = [
     path('card/all', Cards.as_view(), name='cards'),
     path('card', CardViewSet.as_view({'post': 'create'}), name='card - create'),
     path('deck/<int:id>', DeckID.as_view(), name='deck'),
-    path('deck', DeckViewSet.as_view({'post': 'create'}), name='deck - create') # create deck based on request data
+    path('deck', DeckViewSet.as_view({'post': 'create'}), name='deck - create'),
+    path('category', CategoryViewSet.as_view({'post': 'create'}), name='category - create'),
 ]
