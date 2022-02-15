@@ -40,3 +40,14 @@ class DeckSerializer(serializers.ModelSerializer):
             'author',
             'card'
         ]
+        extra_kwargs = {
+            'author': {'allow_null': False, 'required': True},
+            'categories': {'allow_null': True, 'required': False, 'allow_blank': True}
+        }
+
+    def create(self, validated_data):
+        categories = validated_data.pop("categories")
+        print(validated_data)
+        deck = Deck.objects.create(**validated_data)
+        deck.categories.set(categories)
+        return deck
