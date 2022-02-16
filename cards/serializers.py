@@ -24,12 +24,23 @@ class AuthorSerializer(serializers.ModelSerializer):
             'username'
         ]
 
+class CardDeckSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Card
+        fields = [
+            'id',
+            'content',
+            'type'
+        ]
+
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
         fields = [
+            'id',
             'content',
-            'type'
+            'type',
+            'deck'
         ]
         extra_kwargs = {
             'deck': {'allow_null': False, 'required': True},
@@ -47,9 +58,7 @@ class CardSerializer(serializers.ModelSerializer):
 
 class DeckSerializer(serializers.ModelSerializer):
 
-    categories = CategorySerializer(many=True, read_only=True)
-    author = AuthorSerializer(many=False, read_only=True)
-    card = CardSerializer(many=True, read_only=True)
+    card = CardDeckSerializer(many=True)
 
     class Meta:
         model = Deck
@@ -65,13 +74,16 @@ class DeckSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'author': {'allow_null': False, 'required': True},
-            'categories': {'allow_null': True, 'required': False, 'allow_blank': True}
+            'categories': {'allow_null': True, 'required': False, 'many': True, 'allow_empty': True}
         }
 
     def create(self, validated_data):
         categories = validated_data.pop("categories")
+        card_data = validated_data.pop("card")
         deck = Deck.objects.create(**validated_data)
         deck.categories.set(categories)
+        for card in card_data:
+            Card.objects.create(deck=deck, **card)
         return deck
 
     def update(self, instance, validated_data):
