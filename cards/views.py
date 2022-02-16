@@ -49,6 +49,15 @@ class CardViewSet(ViewSet):
             serializer.save(deck=deck_instance)
             return Response(serializer.data)
 
+    def update(self, request, pk=None):
+        card_instance = Card.objects.get(id=pk)
+        serializer = CardSerializer(card_instance, data=request.data)
+        if not serializer.is_valid():
+            raise APIException(f"ERROR : {serializer.errors}")
+        else:
+            serializer.save()
+            return Response(serializer.data)
+
 class CategoryViewSet(ViewSet):
 
     def create(self, request, format=None):
