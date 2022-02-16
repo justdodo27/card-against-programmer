@@ -58,6 +58,7 @@ class DeckSerializer(serializers.ModelSerializer):
             'description',
             'categories',
             'date_created',
+            'date_updated',
             'mature_content',
             'author',
             'card'
@@ -72,3 +73,12 @@ class DeckSerializer(serializers.ModelSerializer):
         deck = Deck.objects.create(**validated_data)
         deck.categories.set(categories)
         return deck
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.description = validated_data.get('description', instance.description)
+        instance.mature_content = validated_data.get('mature_content', instance.mature_content)
+        categories = validated_data.pop('categories')
+        instance.categories.set(categories)
+        instance.save()
+        return instance
