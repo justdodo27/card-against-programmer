@@ -12,6 +12,11 @@ class CategorySerializer(serializers.ModelSerializer):
         category = Category.objects.create(**validated_data)
         return category
 
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.save()
+        return instance
+
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

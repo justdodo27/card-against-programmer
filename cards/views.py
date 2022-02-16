@@ -58,3 +58,12 @@ class CategoryViewSet(ViewSet):
         else:
             serializer.save()
             return Response(serializer.data)
+    
+    def update(self, request, pk=None):
+        category_instance = Category.objects.get(id=pk)
+        serializer = CategorySerializer(category_instance, data=request.data)
+        if not serializer.is_valid():
+            raise APIException(f"ERROR : {serializer.errors}")
+        else:
+            serializer.save()
+            return Response(serializer.data)
