@@ -46,6 +46,18 @@ class CardSerializer(serializers.ModelSerializer):
             'deck': {'allow_null': False, 'required': True},
         }
 
+    def validate(self, data):
+        """
+        Check that content and type 
+        """
+        if data['type'] == 0 and '_' in data['content']:
+            raise serializers.ValidationError("card of type white (0) cannot have underscores")
+        if data['type'] == 1 and '_' not in data['content']:
+            raise serializers.ValidationError("card of type black (1) must have at least one underscore")
+        if data['type'] not in (0,1):
+            raise serializers.ValidationError("wrong type")
+        return data
+
     def create(self, validated_data):
         card = Card.objects.create(**validated_data)
         return card
