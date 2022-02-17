@@ -1,3 +1,4 @@
+from multiprocessing import managers
 from rest_framework import serializers
 from .models import Deck, Category, Card, User
 
@@ -5,6 +6,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = [
+            'id',
             'name'
         ]
 
@@ -21,6 +23,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+            'id',
             'username'
         ]
 
@@ -68,8 +71,25 @@ class CardSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-class DeckSerializer(serializers.ModelSerializer):
+class DeckListSerializer(serializers.ModelSerializer):
+    card = CardDeckSerializer(many=True)
+    author = AuthorSerializer(many=False, read_only=True)
+    categories = CategorySerializer(many=True)
 
+    class Meta:
+        model = Deck
+        fields = [
+            'name',
+            'description',
+            'categories',
+            'date_created',
+            'date_updated',
+            'mature_content',
+            'author',
+            'card'
+        ]
+
+class DeckSerializer(serializers.ModelSerializer):
     card = CardDeckSerializer(many=True)
 
     class Meta:
