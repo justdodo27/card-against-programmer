@@ -53,6 +53,10 @@ class CardSerializer(serializers.ModelSerializer):
         """
         Check that content and type 
         """
+        user_id = self.context['request'].user.id
+        method = self.context['request'].method
+        if method in ['PUT', 'DELETE'] and user_id != self.instance.deck.author.id:
+            raise serializers.ValidationError("you are not the author")
         if data['type'] == 0 and '_' in data['content']:
             raise serializers.ValidationError("card of type white (0) cannot have underscores")
         if data['type'] == 1 and '_' not in data['content']:
@@ -108,6 +112,17 @@ class DeckSerializer(serializers.ModelSerializer):
             'author': {'allow_null': False, 'required': True},
             'categories': {'allow_null': True, 'required': False, 'many': True, 'allow_empty': True}
         }
+
+    def validate(self, data):
+        """
+        Check that content and type 
+        """
+        user_id = self.context['request'].user.id
+        method = self.context['request'].method
+        if method in ['PUT', 'DELETE'] and user_id != self.instance.author.id:
+            raise serializers.ValidationError("you are not the author")
+        
+        return data
 
     def create(self, validated_data):
         categories = validated_data.pop("categories")

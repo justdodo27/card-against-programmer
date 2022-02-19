@@ -3,9 +3,10 @@ from rest_framework import generics, filters, permissions
 from .models import Deck, Card, Category
 from .serializers import CategorySerializer, DeckSerializer, CardSerializer, DeckListSerializer
 from .pagination import SmallResultsSetPagination, LargeResultsSetPagination
+from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope, TokenHasScope
 
 class CardsList(generics.ListCreateAPIView):
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = Card.objects.all()
     serializer_class = CardSerializer
     pagination_class = LargeResultsSetPagination
@@ -15,7 +16,7 @@ class CardsList(generics.ListCreateAPIView):
     ordering = ['content']
 
 class CardsDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = Card.objects.all()
     serializer_class = CardSerializer
 
@@ -24,7 +25,7 @@ class CardsDetail(generics.RetrieveUpdateDestroyAPIView):
         return super().update(request, *args, **kwargs)
 
 class CategoryList(generics.ListCreateAPIView):
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -33,12 +34,12 @@ class CategoryList(generics.ListCreateAPIView):
     ordering = ['name']
 
 class CategoryDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 class DecksList(generics.ListCreateAPIView):
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = Deck.objects.all()
     pagination_class = SmallResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -62,7 +63,7 @@ class DecksList(generics.ListCreateAPIView):
         return DeckListSerializer
 
 class DecksDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = Deck.objects.all()
     serializer_class = DeckSerializer
 
