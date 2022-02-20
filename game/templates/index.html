@@ -1,0 +1,19 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VueAPP Test</title>
+</head>
+<body>
+    <h1>Vue testing :D</h1>
+    <div id="app"></div>
+
+    <script type="text/javascript" src="{% static 'src/vue/dist/js/chunk-vendors.js' %}"></script>
+    <script type="text/javascript" src="{% static 'src/vue/dist/js/app.js' %}"></script>
+    <link href="{% static 'src/vue/dist/css/app.css' %}" rel=stylesheet>
+</body>
+</html>
