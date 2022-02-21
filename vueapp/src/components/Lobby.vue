@@ -1,5 +1,5 @@
 <template>
-    <main>
+    <main id="lobby">
         <form @submit.prevent="">
             <div class="input-group">
                 <label for="#nickname-input">Nickname</label>
@@ -32,7 +32,7 @@ export default {
 </script>
 
 <style lang="scss">
-    main {
+    main#lobby {
         grid-row: 2/3;
         grid-column: 2/3;
         border: 1px solid black;

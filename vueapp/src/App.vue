@@ -1,18 +1,19 @@
 <template>
   <div class="container">
     <lobby v-show="$store.getters.getNickname == null"></lobby>
-    <div v-show="$store.getters.getNickname != null">Logged in as {{ $store.getters.getNickname }}</div>
+    <game v-show="$store.getters.getNickname != null"></game>
   </div>
 </template>
 
 <script>
 // import HelloWorld from "./components/HelloWorld.vue";
 import Lobby from "./components/Lobby.vue"
+import Game from "./components/Game.vue"
 
 export default {
   name: "App",
   components: {
-    Lobby,
+    Lobby, Game
   },
 };
 </script>
