@@ -1,15 +1,18 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Welcome to Your Vue.js App" />
+  <div class="container">
+    <lobby v-show="$store.getters.getNickname == null"></lobby>
+    <div v-show="$store.getters.getNickname != null">Logged in as {{ $store.getters.getNickname }}</div>
+  </div>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+// import HelloWorld from "./components/HelloWorld.vue";
+import Lobby from "./components/Lobby.vue"
 
 export default {
   name: "App",
   components: {
-    HelloWorld,
+    Lobby,
   },
 };
 </script>
@@ -21,6 +24,34 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.container{
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  grid-template-rows: 1fr 3fr 1fr;
+  height: 100vh;
+  place-items: center;
+}
+
+button{
+  font-size: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 2px;
+  color: lighten(purple, 10%);
+  background-color: lighten(purple, 50%);
+  transition: all 0.1s ease-out;
+}
+
+button:hover{
+  cursor: pointer;
+}
+
+button:active{
+  color: lighten(purple, 50%);
+  background-color: lighten(purple, 10%);
 }
 </style>
