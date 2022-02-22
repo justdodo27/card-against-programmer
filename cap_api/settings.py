@@ -136,6 +136,9 @@ REST_FRAMEWORK = {
 ASGI_APPLICATION = 'cap_api.routing.application'
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis://:123@localhost:6379/0")],
+        },
     }
 }
