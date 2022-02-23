@@ -1,7 +1,7 @@
 <template>
   <div class="container">
-    <lobby v-show="$store.getters.getNickname == null"></lobby>
-    <game v-show="$store.getters.getNickname != null"></game>
+    <lobby v-if="url == '/game/'"></lobby>
+    <game v-else></game>
   </div>
 </template>
 
@@ -15,6 +15,13 @@ export default {
   components: {
     Lobby, Game
   },
+  data(){
+    return {
+      url: window.location.pathname
+  }},
+  created(){
+    console.log(window.location.pathname)
+  }
 };
 </script>
 

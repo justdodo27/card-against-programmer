@@ -1,31 +1,57 @@
 <template>
     <main id="lobby">
-        <form @submit.prevent="">
-            <div class="input-group">
-                <label for="#nickname-input">Nickname</label>
-                <input id="nickname-input" type="text" v-model="nickname">
-            </div>
-            <hr>
-            <button @click="login">Join game</button>
-        </form>
-        <h1>{{ nickname }}</h1>
+        <login-form @submit-form="login" v-if="$store.getters.getId == null"></login-form>
+        <div v-else>
+            <button>Create Game</button>
+            <button @click="logout">Logout</button>
+        </div>
     </main>
 </template>
 
 <script>
+import LoginForm from "./LoginForm.vue";
+
+
 export default {
     setup() {
         
     },
-    data() {
+    components: {
+        LoginForm
+    },
+    data(){
         return {
-            nickname: this.$store.getters.getNickname
+            socket: new WebSocket(
+                'ws://' +
+                window.location.host +
+                '/ws/game/'
+            )
         }
     },
     methods: {
-        login(){
-            this.$store.commit('setnickname', {nickname: this.nickname})
-            console.log(this.$store.getters.getNickname)
+        login(event){
+            this.socket.send(JSON.stringify({
+                "type": "login",
+                "username": event.username,
+                "password": event.password
+            }))
+        },
+        logout(){
+            this.socket.send(JSON.stringify({
+                "type": "logout"
+            }))
+            this.$store.commit('logout')
+        }
+    },
+    created(){
+        this.socket.onmessage = (e) => {
+            console.log(e.data)
+            const data = JSON.parse(e.data)
+            if (data == -1){
+                window.alert("Wrong password!")
+            }else{
+                this.$store.commit('login', data)
+            }
         }
     }
 }
@@ -33,7 +59,7 @@ export default {
 
 <style lang="scss">
     main#lobby {
-        grid-row: 2/3;
+        grid-row: 1/4;
         grid-column: 2/3;
         border: 1px solid black;
         border-top-left-radius: 20px;
@@ -45,11 +71,5 @@ export default {
         place-items: center;
     }
 
-    .input-group{
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        margin: 0 20px;
-    }
+    
 </style>
