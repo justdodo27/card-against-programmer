@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+import json
 
 def index(request):
     return render(request, 'index.html')
