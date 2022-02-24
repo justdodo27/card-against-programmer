@@ -65,7 +65,17 @@ class LobbyConsumer(AsyncWebsocketConsumer):
 
 
 class GameRoomConsumer(AsyncWebsocketConsumer):
-    games = dict()
+    '''
+    Basic wroking schema (TODO)
+    1. accept connection
+    2. check if user is authenticated
+    2.1 if yes go to step 3
+    2.2 if not wait for authenticate
+    3. ask user for password (if needed) 
+    4. join user to group and show him game
+    5. if user is creator receive information about updating the room or starting the game
+    ... rest of the logic for playing the game after start
+    '''
 
     async def connect(self):
         self.room_code = self.scope['url_route']['kwargs']['room_code']
