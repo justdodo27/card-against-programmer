@@ -4,10 +4,12 @@ from channels.db import database_sync_to_async
 from typing import Union, List
 import uuid
 from .models import Player, Game
-
+from django.utils.crypto import get_random_string
 
 class LobbyConsumer(AsyncWebsocketConsumer):
-
+    '''
+    Change authorization to JWT/oauth
+    '''
     async def connect(self):
         await self.accept()
 
@@ -21,13 +23,27 @@ class LobbyConsumer(AsyncWebsocketConsumer):
             if user:
                 await self.send(text_data='{"id":'+f'{user.id}, "username":"{user.username}"'+"}")
             elif user == False:
-                await self.send(text_data=str(-1))
+                await self.send(text_data='{"error": "Wrong password!"}')
         elif type == "logout":
+            pass
+        elif type == "create":
+            game = await self.create_game(text_data_json)
+            if game:
+                data = {
+                    "code": game.code,
+                    "name": game.name,
+                    "password": game.password,
+                    "creator": game.creator.id,
+                    "cards": game.cards
+                }
+                await self.send(text_data=json.dumps(data))
+            else:
+                await self.send(text_data='{"error": "Cannot create game!"}')
+        elif type == "join":
             pass
 
     @database_sync_to_async
     def login(self, data):
-        print("XDDDDDD")
         username = data['username']
         password = data['password']
 
@@ -39,6 +55,13 @@ class LobbyConsumer(AsyncWebsocketConsumer):
         else:
             return False
                 
+    @database_sync_to_async
+    def create_game(self, data):
+        user_id = data["user"]
+        if (user := Player.objects.filter(id=user_id).first()) is None:
+            return False
+        game = Game.objects.create(creator=user, code=get_random_string(length=8))
+        return game
 
 
 class GameRoomConsumer(AsyncWebsocketConsumer):

@@ -2,7 +2,7 @@
     <main id="lobby">
         <login-form @submit-form="login" v-if="$store.getters.getId == null"></login-form>
         <div v-else>
-            <button>Create Game</button>
+            <button @click="createGame()">Create Game</button>
             <button @click="logout">Logout</button>
         </div>
     </main>
@@ -41,14 +41,23 @@ export default {
                 "type": "logout"
             }))
             this.$store.commit('logout')
+        },
+        createGame(){
+            const user_id = this.$store.getters.getId
+            if (user_id) this.socket.send(JSON.stringify({
+                "type": "create",
+                "user": user_id
+            }))
         }
     },
     created(){
         this.socket.onmessage = (e) => {
             console.log(e.data)
             const data = JSON.parse(e.data)
-            if (data == -1){
-                window.alert("Wrong password!")
+            if (data.error){
+                window.alert(data.error)
+            }else if(data.code){
+                window.location += data.code + "/"
             }else{
                 this.$store.commit('login', data)
             }
