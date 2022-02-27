@@ -1,18 +1,26 @@
 <template>
     <main>
-        <h3 v-show="$store.getters.getNickname != null">Logged in as {{ $store.getters.getNickname }}</h3>
+        <login-form @submit-form="login" v-if="$store.getters.getId == null"></login-form>
+        <div v-else>
+        <game-form></game-form>
         <ul>
             <li v-for="msg in messages" :key=msg>{{ msg }}</li>
         </ul>
         <button @click="send()">Send Message</button>
+        </div>
     </main>
 </template>
 
 <script>
+import LoginForm from "./LoginForm.vue"
+import GameForm from "./GameForm.vue"
 
 export default {
     setup() {
         
+    },
+    components: {
+        LoginForm, GameForm
     },
     data() {
         return {
@@ -25,6 +33,19 @@ export default {
             console.log("CLICKED")
             this.gameSocket.send(JSON.stringify({
                 'message': 'XDDD',
+            }))
+        },
+        login(event){
+            this.gameSocket.send(JSON.stringify({
+                "type": "login",
+                "username": event.username,
+                "password": event.password
+            }))
+        },
+        authenticate(id){
+            this.gameSocket.send(JSON.stringify({
+                "type": "authenticate",
+                "user": id,
             }))
         }
     },
@@ -40,8 +61,19 @@ export default {
 
         this.gameSocket.onmessage = (e) => {
             const data = JSON.parse(e.data)
-            if (data.message)this.messages.push(data.message)
-            else this.messages.push(data.tester)
+            console.log(data)
+            if (data.info && data.info == "authenticate"){
+                const user = this.$store.getters.getId
+                if (user){
+                    this.authenticate(user)
+                }
+            }else if (data.info && data.info == "user"){
+                const user = {"id": data.id, "username": data.username}
+                this.$store.commit('login', user)
+                this.authenticate(data.id)
+            }else if (data.error){
+                window.alert(data.error)
+            }
         }
     }
 }

@@ -79,30 +79,74 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         self.room_code = self.scope['url_route']['kwargs']['room_code']
-        self.user = self.scope["user"]
-        self.user_uuid = uuid.uuid4()
+        self.room = await self.get_room(self.room_code)
+        if self.room is not None:
+            await self.accept()
+            await self.send(text_data='{"info": "authenticate"}')
+        else: 
+            await self.close()
+
+    async def receive(self, text_data=None, bytes_data=None):
+        text_data_json = json.loads(text_data)
+        type = text_data_json["type"]
+
+        if type == "authenticate":
+            user_id = text_data_json['user']
+            if user := await self.get_user(user_id=user_id):
+                self.user = user
+                if await self.is_creator() or self.room.password is None:
+                    await self.channel_layer.group_add(
+                        self.room_code,
+                        self.channel_name
+                    )
+
+                    await self.channel_layer.group_send(
+                        self.room_code,
+                        {
+                            'type': 'chat_msg',
+                            'message': f"{self.user.username} joined",
+                        }
+                    )
+
+                if self.room.password is not None:
+                    await self.send(text_data='{"info": "password"}')
+            else:
+                await self.send(text_data='{"error": "Wrong user!"}')
+        elif type == "login":
+            user = await self.login(text_data_json)
+            if user:
+                await self.send(text_data='{"info": "user", "id":'+f'{user.id}, "username":"{user.username}"'+"}")
+            else:
+                await self.send(text_data='{"error": "Wrong password!"}')
+        elif type == "logout":
+            pass
+        elif type == "password" and self.user:
+            password = text_data_json['password']
+            if self.room.password == password:
+                await self.channel_layer.group_add(
+                    self.room_code,
+                    self.channel_name
+                )
+
+                await self.channel_layer.group_send(
+                    self.room_code,
+                    {
+                        'type': 'chat_msg',
+                        'message': f"{self.user.username} joined",
+                    }
+                )
+            else: 
+                await self.send(text_data='{"error": "Wrong password!"}')
+        elif type == "config" and self.user:
+            pass
+        elif type == "start" and self.user:
+            pass
         
-
-        await self.channel_layer.group_add(
-            self.room_code,
-            self.channel_name
-        )
-    
-        await self.accept()
-
-        await self.channel_layer.group_send(
-            self.room_code,
-            {
-                'type': 'msg',
-                'tester': "test msg",
-            }
-        )
-
-    async def msg(self, event):
-        tester = event['tester']
+    async def chat_msg(self, event):
+        message = event['message']
 
         await self.send(text_data=json.dumps({
-            'tester': tester,
+            'message': message,
         }))
 
     async def disconnect(self, code):
@@ -110,22 +154,31 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
             self.room_code,
             self.channel_name
         )
-    
-    async def receive(self, text_data=None, bytes_data=None):
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
 
-        await self.channel_layer.group_send(
-            self.room_code,
-            {
-                'type': 'chat_message',
-                'message': message
-            }
-        )
+    @database_sync_to_async
+    def get_room(self, code):
+        if (room := Game.objects.filter(code=code).first()) is None:
+            return None
+        else:
+            return room
 
-    async def chat_message(self, event):
-        message = event['message']
+    @database_sync_to_async
+    def get_user(self, user_id, token=None): # change it later to token authorization etc.
+        return Player.objects.filter(id=user_id).first()
 
-        await self.send(text_data=json.dumps({
-            'message': message,
-        }))
+    @database_sync_to_async
+    def login(self, data):
+        username = data['username']
+        password = data['password']
+
+        if (user := Player.objects.filter(username=username).first()) is None:
+            user = Player.objects.create(username=username, password=password)
+            return user
+        elif user.password == password:
+            return user
+        else:
+            return None
+
+    @database_sync_to_async
+    def is_creator(self):
+        return self.user.id == self.room.creator.id
