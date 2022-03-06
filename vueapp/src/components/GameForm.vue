@@ -9,7 +9,10 @@
             <input id="password-input" type="password" v-model="password">
         </div>
         <hr>
+        <div>
         <button @click="submitForm()">Save Settings</button>    
+        <button>Start Game</button>
+        </div>
     </form>    
 </template>
 
@@ -27,7 +30,12 @@ export default {
     },
     methods: {
         submitForm(){
-            console.log("submit")
+            const data = {
+                name: this.name,
+                password: this.password,
+                cards: this.cards
+            }
+            this.$emit('submitForm', data)
         }
     }
 }
@@ -40,5 +48,18 @@ export default {
         justify-content: center;
         align-items: center;
         margin: 0 20px;
+    }
+
+    form{
+        grid-column: 2/3;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    hr{
+        width: 100%;
     }
 </style>

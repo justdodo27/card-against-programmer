@@ -94,21 +94,26 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
             user_id = text_data_json['user']
             if user := await self.get_user(user_id=user_id):
                 self.user = user
-                if await self.is_creator() or self.room.password is None:
+                if await self.is_member() or await self.is_creator() or self.room.password is None:
+                    if not await self.is_member():
+                        await self.add_player()
+                    if await self.is_creator():
+                        await self.send(text_data='{"creator": true}')
+                    
                     await self.channel_layer.group_add(
                         self.room_code,
                         self.channel_name
                     )
 
                     await self.channel_layer.group_send(
-                        self.room_code,
-                        {
-                            'type': 'chat_msg',
-                            'message': f"{self.user.username} joined",
-                        }
-                    )
-
-                if self.room.password is not None:
+                    self.room_code,
+                    {
+                        'type': 'refresh',
+                        'players': await self.get_players(),
+                        'settings': []
+                    }
+                )
+                elif self.room.password is not None:
                     await self.send(text_data='{"info": "password"}')
             else:
                 await self.send(text_data='{"error": "Wrong user!"}')
@@ -123,30 +128,74 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
         elif type == "password" and self.user:
             password = text_data_json['password']
             if self.room.password == password:
+                if not await self.add_player():
+                    await self.send(text_data='{"info": "full"}')
                 await self.channel_layer.group_add(
                     self.room_code,
                     self.channel_name
                 )
 
+                await self.send(text_data='{"info": "ok"}')
+
+                await self.channel_layer.group_send(
+                    self.room_code,
+                    {
+                        'type': 'refresh',
+                        'players': await self.get_players(),
+                        'settings': []
+                    }
+                )
+                
                 await self.channel_layer.group_send(
                     self.room_code,
                     {
                         'type': 'chat_msg',
+                        'server': True,
                         'message': f"{self.user.username} joined",
                     }
                 )
             else: 
                 await self.send(text_data='{"error": "Wrong password!"}')
+        elif type == "message" and self.user and await self.is_member():
+            await self.channel_layer.group_send(
+                self.room_code,
+                {
+                    'type': 'chat_msg',
+                    'server': False,
+                    'user': self.user.username,
+                    'message': text_data_json["message"],
+                }
+            )
         elif type == "config" and self.user:
-            pass
+            if await self.is_creator() is False:
+                await self.send(text_data='{"error": "You are not the game creator!"}')
+            else:
+                data = {
+                    'name': text_data_json['name'], 
+                    'password': text_data_json['password']
+                }
+                await self.update_room(data)
         elif type == "start" and self.user:
             pass
         
     async def chat_msg(self, event):
         message = event['message']
+        if event['server']:
+            user = 'Server'
+        else:
+            user = event['user']
 
         await self.send(text_data=json.dumps({
+            'user': user,
             'message': message,
+        }))
+
+    async def refresh(self, event):
+        players = event['players']
+
+        await self.send(text_data=json.dumps({
+            'info': 'refresh',
+            'players': players
         }))
 
     async def disconnect(self, code):
@@ -154,6 +203,8 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
             self.room_code,
             self.channel_name
         )
+        if self.user and not await self.is_creator() and self.room:
+            await self.disconnect_player()
 
     @database_sync_to_async
     def get_room(self, code):
@@ -182,3 +233,35 @@ class GameRoomConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def is_creator(self):
         return self.user.id == self.room.creator.id
+
+    @database_sync_to_async
+    def is_member(self):
+        return self.user in self.room.players.all()
+
+    @database_sync_to_async
+    def add_player(self):
+        game = Game.objects.filter(pk=self.room.id).first()
+        # add players count validation etc.
+        game.players.add(self.user)
+        return True
+
+    @database_sync_to_async
+    def disconnect_player(self):
+        self.room.players.remove(self.user)
+
+    @database_sync_to_async
+    def get_players(self):
+        players = self.room.players.all()
+        result = []
+
+        for player in players:
+            result.append(player.username)
+
+        return result
+
+    @database_sync_to_async
+    def update_room(self, data):
+        room = Game.objects.filter(id=self.room.id)
+        room.update(name = data['name'])
+        room.update(password = data['password'])
+        self.room = room.first()
